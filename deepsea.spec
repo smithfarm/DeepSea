@@ -290,6 +290,7 @@ systemctl try-restart salt-master > /dev/null 2>&1 || :
 %config /srv/salt/ceph/remove/mds/*.sls
 %config /srv/salt/ceph/remove/rgw/*.sls
 %config /srv/salt/ceph/remove/storage/*.sls
+%config /srv/salt/ceph/remove/storage/drain/*.sls
 %config /srv/salt/ceph/rescind/*.sls
 %config /srv/salt/ceph/rescind/admin/*.sls
 %config /srv/salt/ceph/rescind/client-iscsi/*.sls
@@ -312,6 +313,7 @@ systemctl try-restart salt-master > /dev/null 2>&1 || :
 %config /srv/salt/ceph/rescind/storage/*.sls
 %config /srv/salt/ceph/rescind/storage/keyring/*.sls
 %config /srv/salt/ceph/reset/*.sls
+%config /srv/salt/ceph/rescind/storage/terminate/*.sls
 %config /srv/salt/ceph/restart/*.sls
 %config /srv/salt/ceph/rgw/*.sls
 %config /srv/salt/ceph/rgw/files/*.j2
