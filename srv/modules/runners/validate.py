@@ -591,6 +591,28 @@ class Validate(object):
 
         self._set_pass_status('ceph_version')
 
+    def ceph_tgt(self):
+        """
+        Verify ceph_tgt if set
+        """
+        local = salt.client.LocalClient()
+        present = False
+        for node in self.data.keys():
+            if 'ceph_tgt' in self.data[node]:
+                present = True
+                data = local.cmd(self.data[node]['ceph_tgt'] , 
+                                 'test.ping', [''], expr_form="compound")
+                break
+        if present:
+            if data:
+                self.passed['ceph_tgt'] = "valid"
+            else:
+                msg = "Invalid compound match: {}".format(self.data[node]['ceph_tgt'])
+                self.errors['ceph_tgt'] = [ msg ]
+        else:
+            self.passed['ceph_tgt'] = "valid"
+
+
     def report(self):
         self.printer.add(self.name, self.passed, self.errors, self.warnings)
 
@@ -675,6 +697,7 @@ def setup(**kwargs):
     v = Validate("setup", pillar_data, [], printer)
     v.master_minion()
     v.ceph_version()
+    v.ceph_tgt()
     v.report()
 
     printer.print_result()
