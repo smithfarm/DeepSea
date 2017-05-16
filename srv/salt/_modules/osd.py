@@ -958,6 +958,118 @@ def is_activated(device):
                 return True
     return False
 
+class OSDConfig(object):
+    """
+    Attributes:
+    * format
+      * xfs
+        * raw(TBD)
+        * journal
+        * journal_size
+      * bluestore
+        * raw(TBD)
+        * wal_size
+        * wal_device
+        * db_size
+        * db_device
+    * encrypted
+    * capacity
+    """
+
+    OLD_FORMAT = 'v1'
+    NEW_FORMAT = 'v2'
+    DEFAULT_FORMAT_FOR_OLD_VERSION = 'xfs'
+    DEFAULT_FORMAT_FOR_NEW_VERSION = 'bluestore'
+
+    def __init__(self, device, **kwargs):
+        filters = kwargs.get('filters', None)
+        # top_level_identifiier
+        self.tli = __pillar__['ceph']['storage']['osds']
+        self.device = device
+        self.capacity = self.set_capacaity()
+        self.bytes_c = self.set_bytes()
+        self.osd_format = self.set_format()
+        self.journal = self.set_journal()
+        self.wal_size = self.set_wal_size()
+        self.wal = self.set_wal()
+        self.db_size = self.set_db_size()
+        self.db = self.set_db()
+        # default for encryption can be retrieved from the global pillar
+        self.encryption = self.set_encryption()
+
+    def set_bytes(self):
+        disks = __salt__['mine.get'](tgt=__grains__['id'], fun='cephdisks.list')
+        for disk in disks[__grains__['id']]:
+            if disk['Device File'] == self.device:
+                return disk['Bytes']
+
+    def set_capacity(self):
+        disks = __salt__['mine.get'](tgt=__grains__['id'], fun='cephdisks.list')
+        for disk in disks[__grains__['id']]:
+            if disk['Device File'] == self.device:
+                return disk['Capacity']
+
+    def _config_version(self):
+        if 'storage' in __pillar__ and 'osds' in __pillar__['storage']:
+            return OLD_FORMAT
+        if 'ceph' in __pillar__ and 'storage' in __pillar__['ceph']:
+            return NEW_FORMAT
+
+    def set_format(self):
+        """
+        If you have the old version of the config structure
+        you will end up with XFS
+        If you happen to have the new version
+        otherwise with bluestore
+        """
+        if self._config_version() == OLD_FORMAT:
+            # Needs there be checks if the device is actually there?
+            # I think that stack.py takes care of removing the old entry..
+            # but that also means you can have EITHER the new version
+            # OR the old version..
+            return DEFAULT_FORMAT_FOR_OLD_VERSION
+        if self._config_version() == NEW_FORMAT:
+            if 'format' in self.tli[self.device]:
+                return __pillar__['ceph']['storage']['osds'][self.device]['format']
+            return DEFAULT_FORMAT_FOR_NEW_VERSION
+
+        raise("Probably a parsing Error or something not written to the pillar yet..")
+
+    def set_journal(self, default=False):
+        if self._config_version() == OLD_FORMAT:
+            struct = __pillar__['storage']['data+journals']
+            for device, journal in __pillar__['storage']['data+journals']:
+                if device == self.device:
+                    return journal
+                else:
+                    log.info("Couldn't find a jornal for {}".format(device))
+                    return default
+
+    def _check_existence(self, key, ident, device, default=None):
+        if key in ident[device]:
+            return ident[ident][key]
+        return default
+
+    def set_wal_size(self, default='200M'):
+        if self._config_version() == NEW_FORMAT:
+            return self._check_existence('wal_size', self.tli, device, default=default):
+
+    def set_wal(self):
+        if self._config_version() == NEW_FORMAT:
+            return self._check_existence('wal', self.tli, device):
+
+    def set_db_size(self, default='200M'):
+        if self._config_version() == NEW_FORMAT:
+            return self._check_existence('db_size', self.tli, device, default=default):
+
+    def set_db(self):
+        if self._config_version() == NEW_FORMAT:
+            return self._check_existence('db', self.tli, device):
+
+    def set_encryption(self, default=False):
+        if self._config_version() == NEW_FORMAT:
+            return self._check_existence('encryption', self.tli, device, default=default):
+
 def prepare(device):
     """
     Return ceph-disk command to prepare OSD.
@@ -966,10 +1078,9 @@ def prepare(device):
     give the desired results since the evaluation of the prepare command (and
     the partition check) occurs prior to creating the partitions
     """
-    osdp = OSDPartitions()
-    osdp.partition(device)
-    osdc = OSDCommands()
-    return osdc.prepare(device)
+    device_o = OSDConfig(device)
+    OSDPartitions()partition(device_o)
+    return OSDCommands().prepare(device_o)
 
 def activate(device):
     """
