@@ -357,3 +357,13 @@ EOF
   _run_test_script_on_node $TESTSCRIPT $CLIENTNODE
 }
 
+function python_crush_install {
+    zypper addrepo http://download.opensuse.org/repositories/filesystems:/ceph:/luminous/openSUSE_Leap_42.3/filesystems:ceph:luminous.repo
+    zypper --non-interactive --no-gpg-checks refresh
+    zypper --non-interactive install --no-recommends python-crush
+    zypper --non-interactive info python-crush
+}
+
+function python_crush_sanity_test {
+    crush --help
+}
