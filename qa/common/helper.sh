@@ -13,7 +13,7 @@ function _report_stage_failure_and_die {
   echo "********** Stage $stage_num failed with $number_of_failures failures **********"
   echo "Here comes the log:"
   cat $stage_log_path
-  exit 1
+  #exit 1
 }
 
 function _run_stage {
