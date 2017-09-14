@@ -63,7 +63,7 @@ class Config(object):
                 md5 = hashlib.md5(open(fl, 'rb').read()).hexdigest()
                 checksums += md5
         if checksums:
-            return checksums
+            return hashlib.md5(checksums).hexdigest()
         log.debug("No file found to generate a checksum from. Looked for {}".format(self.service_conf_files))
         return None
 
