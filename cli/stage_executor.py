@@ -10,6 +10,7 @@ which is equivalent to:
     $ salt-run state.orch ceph.stage.0
 """
 from __future__ import absolute_import
+from __future__ import print_function
 
 import logging
 import os
@@ -22,6 +23,7 @@ import sys
 from .common import PrettyPrinter as PP
 from .monitor import Monitor
 from .monitors.terminal_outputter import SimplePrinter, StepListPrinter
+from .stage_parser import StateRenderingException, RenderingException
 
 
 # pylint: disable=C0103
@@ -71,12 +73,30 @@ def run_stage(stage_name, hide_state_steps, hide_dynamic_steps, simple_output):
         hide_dynamic_steps (bool): don't show runtime generated steps
         simple_output (bool): use the minimal outputter
     """
+    if simple_output:
+        PP.NO_FORMAT = True
+
     mon = Monitor(not hide_state_steps, not hide_dynamic_steps)
     printer = SimplePrinter() if simple_output else StepListPrinter(False)
     mon.add_listener(printer)
-    mon.parse_stage(stage_name)
-    mon.start()
+    try:
+        mon.parse_stage(stage_name)
+    except RenderingException as ex:
+        # pylint: disable=E1101
+        if isinstance(ex, StateRenderingException):
+            PP.println(PP.bold("An error occurred while rendering one of the following states:"))
+            for state in ex.states:
+                PP.print(PP.cyan("    - {}".format(state)))
+                PP.println(" ({})".format("/srv/salt/{}".format(state.replace(".", "/"))))
+        else:
+            PP.println(PP.bold("An error occurred while rendering the stage file:"))
+            PP.println(PP.cyan("    {}".format(ex.stage_file)))
+        PP.println()
+        PP.println(PP.bold("Error description:"))
+        PP.println(PP.red(ex.pretty_error_desc_str()))
+        return 2
 
+    mon.start()
     executor = StageExecutor(stage_name)
 
     # pylint: disable=W0613
