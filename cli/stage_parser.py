@@ -9,9 +9,11 @@ import glob
 import logging
 import os
 import pickle
+import pwd
 import StringIO
 
 from collections import OrderedDict, defaultdict
+from multiprocessing import Process, Queue
 
 import salt.client
 import salt.exceptions
@@ -426,8 +428,22 @@ class SLSParser(object):
             list(StepType): a list of steps
             str: the parsing stdout
         """
-        result, out = SLSParser._traverse_stage(state_name, stages_only, only_visible_steps,
-                                                cache)
+        def subproc_fun(queue):
+            # changing process user to "salt" so that any runner side-effects during SLS rendering
+            # are done with salt user as owner
+            pw = pwd.getpwnam("salt")
+            os.setgid(pw.pw_gid)
+            os.setuid(pw.pw_uid)
+            result, out = SLSParser._traverse_stage(state_name, stages_only, only_visible_steps,
+                                                    cache)
+            queue.put(result)
+            queue.put(out)
+        queue = Queue()
+        p = Process(target=subproc_fun, args=[queue])
+        p.start()
+        p.join()
+        result = queue.get()
+        out = queue.get()
 
         def process_requisite_directive(step, directive):
             """
