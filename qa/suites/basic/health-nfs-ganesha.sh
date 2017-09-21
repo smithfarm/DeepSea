@@ -90,7 +90,9 @@ ceph_conf_small_cluster
 run_stage_3 "$CLI"
 ceph_cluster_status
 nfs_ganesha_no_root_squash
+ls -l /srv/salt/ceph/configuration/files/ceph.conf.checksum/rgw.conf || true
 run_stage_4 "$CLI"
+ls -l /srv/salt/ceph/configuration/files/ceph.conf.checksum/rgw.conf || true
 ceph_cluster_status
 ceph_health_test
 nfs_ganesha_cat_config_file
