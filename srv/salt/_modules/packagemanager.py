@@ -152,7 +152,7 @@ class Zypper(PackageManager):
         have the possibility to handle those differently.
         """
         self.base_command = ['zypper']
-        self.zypper_flags = ['--non-interactive']
+        self.zypper_flags = ['--non-interactive', '--no-gpg-checks']
         self.kernel = kwargs.get('kernel', False)
         self.reboot = kwargs.get('reboot', True)
         self.debug = kwargs.get('debug', False)
