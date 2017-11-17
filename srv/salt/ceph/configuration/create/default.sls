@@ -1,3 +1,10 @@
+{% if grains.get('os_family', '') == "Suse" %}
+  {% set user = "salt" %}
+  {% set group = "salt" %}
+{% else %}
+  {% set user = "root" %}
+  {% set group = "root" %}
+{% endif %}
 
 removing minion cache:
   file.absent:
@@ -7,8 +14,8 @@ removing minion cache:
   file.managed:
     - source: salt://ceph/configuration/files/ceph.conf.j2
     - template: jinja
-    - user: salt
-    - group: salt
+    - user: {{ user }}
+    - group: {{ group }}
     - mode: 644
     - makedirs: True
     - fire_event: True
