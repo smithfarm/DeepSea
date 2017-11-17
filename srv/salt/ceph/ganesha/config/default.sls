@@ -1,6 +1,13 @@
 {# silver, silver-common, gold, platinum, red, blue #}
 {# need the context role to be silver, silver, gold, platinum, red, blue #}
 {# red and blue are cephfs configs #}
+{% if grains.get('os_family', '') == "Suse" %}
+  {% set user = "salt" %}
+  {% set group = "salt" %}
+{% else %}
+  {% set user = "root" %}
+  {% set group = "root" %}
+{% endif %}
 
 
 prevent empty rendering:
@@ -24,8 +31,8 @@ check {{ role }}:
       - salt://ceph/ganesha/files/{{ role }}.conf.j2
     - template: jinja
     - makedirs: True
-    - user: salt
-    - group: salt
+    - user: {{ user }}
+    - group: {{ group }}
     - mode: 600
     - context:
       role: {{ salt['rgw.configuration'](role) }}
