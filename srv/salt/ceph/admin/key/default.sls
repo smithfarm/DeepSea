@@ -1,14 +1,22 @@
 
+{% if grains.get('os_family', '') == "Suse" %}
+  {% set user = "salt" %}
+  {% set group = "salt" %}
+{% else %}
+  {% set user = "root" %}
+  {% set group = "root" %}
+{% endif %}
+
 {# The mon creation needs this key as well #}
 {# Named the file the same as other components, there is only one keyring #}
 {% set keyring_file = "/srv/salt/ceph/admin/cache/ceph.client.admin.keyring" %}
 {{ keyring_file }}:
   file.managed:
-    - source: 
+    - source:
       - salt://ceph/admin/files/keyring.j2
     - template: jinja
-    - user: salt
-    - group: salt
+    - user: {{ user }}
+    - group: {{ group }}
     - mode: 600
     - makedirs: True
     - context:

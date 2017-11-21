@@ -1,12 +1,18 @@
-
+{% if grains.get('os_family', '') == "Suse" %}
+  {% set user = "salt" %}
+  {% set group = "salt" %}
+{% else %}
+  {% set user = "root" %}
+  {% set group = "root" %}
+{% endif %}
 
 {% set keyring_file = salt['keyring.file']('osd') %}
 {{ keyring_file}}:
   file.managed:
     - source: salt://ceph/osd/files/keyring.j2
     - template: jinja
-    - user: salt
-    - group: salt
+    - user: {{ user }}
+    - group: {{ group }}
     - mode: 600
     - makedirs: True
     - context:
@@ -18,8 +24,8 @@
   file.managed:
     - source: salt://ceph/osd/files/storage.j2
     - template: jinja
-    - user: salt
-    - group: salt
+    - user: {{ user }}
+    - group: {{ group }}
     - mode: 600
     - makedirs: True
     - context:

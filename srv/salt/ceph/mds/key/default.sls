@@ -1,3 +1,10 @@
+{% if grains.get('os_family', '') == "Suse" %}
+  {% set user = "salt" %}
+  {% set group = "salt" %}
+{% else %}
+  {% set user = "root" %}
+  {% set group = "root" %}
+{% endif %}
 
 prevent empty rendering:
   test.nop:
@@ -8,11 +15,11 @@ prevent empty rendering:
 {% set keyring_file = salt['keyring.file']('mds', host)  %}
 {{ keyring_file}}:
   file.managed:
-    - source: 
+    - source:
       - salt://ceph/mds/files/keyring.j2
     - template: jinja
-    - user: salt
-    - group: salt
+    - user: {{ user }}
+    - group: {{ group }}
     - mode: 600
     - makedirs: True
     - context:

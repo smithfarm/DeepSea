@@ -1,3 +1,10 @@
+{% if grains.get('os_family', '') == "Suse" %}
+  {% set user = "salt" %}
+  {% set group = "salt" %}
+{% else %}
+  {% set user = "root" %}
+  {% set group = "root" %}
+{% endif %}
 
 igw nop:
   test.nop
@@ -23,11 +30,11 @@ demo image:
 
 /srv/salt/ceph/igw/cache/lrbd.conf:
   file.managed:
-    - source: 
+    - source:
       - salt://ceph/igw/files/lrbd.conf.j2
     - template: jinja
-    - user: salt
-    - group: salt
+    - user: {{ user }}
+    - group: {{ group }}
     - mode: 600
 
 # this will guarantee that lrbd.conf will be seen by minions
