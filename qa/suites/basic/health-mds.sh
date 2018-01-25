@@ -67,6 +67,8 @@ run_stage_2 "$CLI"
 ceph_conf_small_cluster
 run_stage_3 "$CLI"
 ceph_cluster_status
+create_all_pools_at_once cephfs_data cephfs_metadata
+ceph osd pool ls detail
 run_stage_4 "$CLI"
 ceph_cluster_status
 ceph_health_test
