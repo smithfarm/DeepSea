@@ -33,9 +33,17 @@ echo "nfs-ganesha debug log script running as $(whoami) on $(hostname --fqdn)"
 sed -i 's/NIV_EVENT/NIV_DEBUG/g' /etc/sysconfig/nfs-ganesha
 cat /etc/sysconfig/nfs-ganesha
 rm -rf /var/log/ganesha/ganesha.log
-systemctl restart nfs-ganesha.service
-systemctl is-active nfs-ganesha.service
-rpm -q nfs-ganesha
+systemctl --full --lines=100 status nfs-ganesha.service
+# BEGIN NFS-GANESHA DAEMON RESTART
+#systemctl restart nfs-ganesha.service
+#systemctl is-active nfs-ganesha.service rpm -q nfs-ganesha
+systemctl stop nfs-ganesha.service
+sleep 60
+pgrep ganesha || true
+ulimit -c unlimited
+/usr/bin/ganesha.nfsd -f /etc/ganesha/ganesha.conf -F
+sleep 60
+# END NFS-GANESHA DAEMON RESTART
 echo "Result: OK"
 EOF
   _run_test_script_on_node $TESTSCRIPT $GANESHANODE
