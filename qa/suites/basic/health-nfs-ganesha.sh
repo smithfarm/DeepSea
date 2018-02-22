@@ -98,6 +98,7 @@ run_stage_4 "$CLI"
 ceph_cluster_status
 ceph_health_test
 nfs_ganesha_cat_config_file
+sleep 1000000
 nfs_ganesha_debug_log
 # kludge to work around mount hang
 #nfs_ganesha_showmount_loop
