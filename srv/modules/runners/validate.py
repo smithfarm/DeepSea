@@ -754,6 +754,10 @@ class Validate(object):
         local = salt.client.LocalClient()
         contents = local.cmd(search, 'pkg.latest_version', ['ceph'], tgt_type="compound")
         for minion, version in contents.items():
+            log.debug("VALIDATE ceph_version: minion {} ceph version {}"
+                      .format(minion, version))
+            if self.in_dev_env:
+                continue
             if not version:
                 info = local.cmd(minion, 'pkg.info_installed', ['ceph'])
                 if info and 'version' in info[minion]['ceph']:
