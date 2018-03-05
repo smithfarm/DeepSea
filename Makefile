@@ -35,9 +35,10 @@ setup.py:
 	sed "s/DEVVERSION/"$(VERSION)"/" setup.py.in > setup.py
 
 pyc: setup.py
-	find srv/ -name '*.py' -exec python -m py_compile {} \;
+	#make sure to create bytecode with the correct version
+	find srv/ -name '*.py' -exec python3 -m py_compile {} \;
 	# deepsea-cli
-	python setup.py build
+	python3 setup.py build
 
 copy-files:
 	# salt-master config files
@@ -67,10 +68,16 @@ copy-files:
 	install -d -m 755 $(DESTDIR)$(DOCDIR)/deepsea/pillar
 	install -m 644 doc/pillar/* $(DESTDIR)$(DOCDIR)/deepsea/pillar/
 	# stacky.py (included in salt 2016.3)
+	install -d -m 755 $(DESTDIR)/srv/modules/__pycache__
+	install -m 644 srv/modules/__pycache__/*.pyc $(DESTDIR)/srv/modules/__pycache__
 	install -d -m 755 $(DESTDIR)/srv/modules/pillar
+	install -d -m 755 $(DESTDIR)/srv/modules/pillar/__pycache__
+	install -m 644 srv/modules/pillar/__pycache__/*.pyc $(DESTDIR)/srv/modules/pillar/__pycache__
 	install -m 644 srv/modules/pillar/stack.py $(DESTDIR)/srv/modules/pillar/
 	# runners
 	install -d -m 755 $(DESTDIR)/srv/modules/runners
+	install -d -m 755 $(DESTDIR)/srv/modules/runners/__pycache__
+	install -m 644 srv/modules/runners/__pycache__/*.pyc $(DESTDIR)/srv/modules/runners/__pycache__
 	install -m 644 srv/modules/runners/*.py* $(DESTDIR)/srv/modules/runners/
 	sed -i "s/DEVVERSION/"$(VERSION)"/" $(DESTDIR)/srv/modules/runners/deepsea.py
 	# pillar
@@ -98,7 +105,13 @@ copy-files:
 	install -d -m 755 $(DESTDIR)/usr/share/man/man1
 	install -m 644 man/deepsea*.1 $(DESTDIR)/usr/share/man/man1
 	# modules
+	install -d -m 755 $(DESTDIR)/srv/__pycache__
+	install -m 644 srv/__pycache__/*.pyc $(DESTDIR)/srv/__pycache__
+	install -d -m 755 $(DESTDIR)/srv/salt/__pycache__
+	install -m 644 srv/salt/__pycache__/*.pyc $(DESTDIR)/srv/salt/__pycache__
 	install -d -m 755 $(DESTDIR)/srv/salt/_modules
+	install -d -m 755 $(DESTDIR)/srv/salt/_modules/__pycache__
+	install -m 644 srv/salt/_modules/__pycache__/*.pyc $(DESTDIR)/srv/salt/_modules/__pycache__
 	install -m 644 srv/salt/_modules/*.py* $(DESTDIR)/srv/salt/_modules/
 	# state files
 	install -d -m 755 $(DESTDIR)/srv/salt/ceph/admin
@@ -280,7 +293,9 @@ copy-files:
 	install -d -m 755 $(DESTDIR)/srv/salt/ceph/monitoring/prometheus/exporters/ceph_rgw_exporter/cron
 	install -m 644 srv/salt/ceph/monitoring/prometheus/exporters/ceph_rgw_exporter/cron/*.sls $(DESTDIR)/srv/salt/ceph/monitoring/prometheus/exporters/ceph_rgw_exporter/cron
 	install -d -m 755 $(DESTDIR)/srv/salt/ceph/monitoring/prometheus/exporters/ceph_rgw_exporter/files
-	install -m 644 srv/salt/ceph/monitoring/prometheus/exporters/ceph_rgw_exporter/files/* $(DESTDIR)/srv/salt/ceph/monitoring/prometheus/exporters/ceph_rgw_exporter/files
+	install -m 644 srv/salt/ceph/monitoring/prometheus/exporters/ceph_rgw_exporter/files/*.py $(DESTDIR)/srv/salt/ceph/monitoring/prometheus/exporters/ceph_rgw_exporter/files
+	install -d -m 755 $(DESTDIR)/srv/salt/ceph/monitoring/prometheus/exporters/ceph_rgw_exporter/files/__pycache__
+	install -m 644 srv/salt/ceph/monitoring/prometheus/exporters/ceph_rgw_exporter/files/__pycache__/*.pyc $(DESTDIR)/srv/salt/ceph/monitoring/prometheus/exporters/ceph_rgw_exporter/files/__pycache__
 	# state files - noout
 	install -d -m 755 $(DESTDIR)/srv/salt/ceph/noout
 	install -d -m 755 $(DESTDIR)/srv/salt/ceph/noout/set
@@ -737,18 +752,18 @@ copy-files:
 	-chown $(USER):$(GROUP) $(DESTDIR)/srv/salt/ceph/rgw/cache || true
 	-chown $(USER):$(GROUP) $(DESTDIR)/srv/salt/ceph/configuration/files/ceph.conf.checksum || true
 
-install: copy-files setup.py
+install: pyc copy-files
 	sed -i '/^sharedsecret: /s!{{ shared_secret }}!'`cat /proc/sys/kernel/random/uuid`'!' $(DESTDIR)/etc/salt/master.d/sharedsecret.conf
 	chown $(USER):$(GROUP) $(DESTDIR)/etc/salt/master.d/*
 	echo "deepsea_minions: '*'" > /srv/pillar/ceph/deepsea_minions.sls
 	chown -R $(USER) /srv/pillar/ceph
 	sed -i '/^master_minion:/s!_REPLACE_ME_!'`cat /etc/salt/minion_id`'!' /srv/pillar/ceph/master_minion.sls
 	systemctl restart salt-master
-	$(PKG_INSTALL) salt-api python-ipaddress
+	$(PKG_INSTALL) salt-api
 	systemctl restart salt-api
 	# deepsea-cli
-	$(PKG_INSTALL) python-setuptools python-click
-	python setup.py install --root=$(DESTDIR)/
+	$(PKG_INSTALL) python3-setuptools python3-click
+	python3 setup.py install --root=$(DESTDIR)/
 
 rpm: pyc tarball test
 	sed '/^Version:/s/[^ ]*$$/'$(VERSION)'/' deepsea.spec.in > deepsea.spec
