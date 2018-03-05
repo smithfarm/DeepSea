@@ -771,8 +771,8 @@ class Validate(object):
                 version = version[:dash_idx]
             if version < JEWEL_VERSION:
                 self.errors.setdefault('ceph_version', []).append(
-                    "The Ceph version available in {} is older than 'jewel' (10.2)"
-                    .format(minion))
+                    "The Ceph version available in {} ({}) is older than 'jewel' ({})"
+                    .format(minion, version, JEWEL_VERSION))
 
         self._set_pass_status('ceph_version')
 
