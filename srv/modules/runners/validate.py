@@ -759,8 +759,8 @@ class Validate(object):
             log.debug("VALIDATE ceph_version: minion ->{}<- latest_version version ->{}<-"
                       .format(minion, version))
             if not version:
-                info = local.cmd(minion, 'pkg.info_installed', ['ceph'])
-                if info and 'version' in info[minion]['ceph']:
+                info = local.cmd(minion, 'pkg.info_installed', ['ceph-common'])
+                if info and 'version' in info[minion]['ceph-common']:
                     version = info[minion]['ceph-common']['version']
                     log.debug("VALIDATE ceph_version: minion ->{}<- info_installed version ->{}<-"
                               .format(minion, version))
