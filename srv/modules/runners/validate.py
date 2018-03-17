@@ -194,7 +194,7 @@ class Util(object):
         return [elem.strip() for elem in list_str.split(delim) if elem.strip()]
 
 
-LUMINOUS_VERSION = "11.2"
+LUMINOUS_VERSION = [11, 2]
 
 
 # pylint: disable=too-many-instance-attributes,too-many-public-methods
@@ -782,12 +782,35 @@ class Validate(object):
             log.debug("VALIDATE ceph_version: minion ->{}<- final munged version ->{}<-"
                       .format(minion, version))
             assert isinstance(version, str), "version value is not a string"
-            # FIXME: "11.10" < "11.2" in Python terms, but not in terms of
-            # version numbering semantics
-            if version < LUMINOUS_VERSION:
+
+            # "11.10" < "11.2" in Python terms, but not in terms of
+            # version numbering semantics, so we have to break the version number
+            # down into its integer components and compare those separately.
+            #
+            # We can assume that Ceph version numbers will always begin with X.Y.Z
+            # where X, Y, and Z are integers. Here, we are only interested in X and Y.
+            #
+            # In other words, there must be at least two version components and
+            # both must be convertible into integers.
+
+            try:
+                version_components = version.split('.')
+                int_version_components = [0, 0]
+                int_version_components[0] = int(version_components[0])
+                int_version_components[1] = int(version_components[1])
+            except (ValueError, IndexError):
+                failmsg = ("Minion {} reports unparseable Ceph version {}"
+                           .format(minion, version))
+                if self.in_dev_env:
+                    log.warning('VALIDATE ceph_version: ' + failmsg)
+                else:
+                    self.errors.setdefault('ceph_version', []).append(failmsg)
+                    continue
+
+            if int_version_components < LUMINOUS_VERSION:
                 self.errors.setdefault('ceph_version', []).append(
-                    "The Ceph version available on minion {} ({}) is older than 'luminous' ({})"
-                    .format(minion, version, LUMINOUS_VERSION))
+                    "The Ceph version available on minion {} ({}) is older than 'luminous' ({}.{})"
+                    .format(minion, version, LUMINOUS_VERSION[0], LUMINOUS_VERSION[1]))
 
         self._set_pass_status('ceph_version')
 
