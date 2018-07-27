@@ -8,10 +8,8 @@ function _report_stage_failure {
     STAGE_SUCCEEDED=""
     local stage_num=$1
     #local stage_log_path=$2
-    #local number_of_failures=$3
 
-    test -z $number_of_failures && number_of_failures="unknown number of"
-    echo "********** Stage $stage_num failed with $number_of_failures failures **********"
+    echo "********** Stage $stage_num failed **********"
     echo "Here comes the systemd log:"
     #cat $stage_log_path
     journalctl -r | head -n 1000
@@ -38,7 +36,6 @@ function _run_stage_cli {
     local deepsea_cli_output_path="/tmp/deepsea.${stage_num}.log"
     local deepsea_exit_status=""
 
-    echo "using DeepSea CLI"
     set +e
     deepsea \
         --log-file=/var/log/salt/deepsea.log \
@@ -49,6 +46,7 @@ function _run_stage_cli {
         --simple-output \
         2>&1 | tee $deepsea_cli_output_path
     deepsea_exit_status="${PIPESTATUS[0]}"
+    set +x
     echo "deepsea exit status: $deepsea_exit_status"
     echo "WWWW"
     if [ "$deepsea_exit_status" = "0" ] ; then
@@ -61,7 +59,7 @@ function _run_stage_cli {
     else
         _report_stage_failure $stage_num
     fi
-    set -e
+    set -ex
 }
 
 function _run_stage_non_cli {
@@ -69,7 +67,9 @@ function _run_stage_non_cli {
     local stage_log_path="/tmp/stage.${stage_num}.log"
 
     echo -n "" > $stage_log_path
+    set +e
     salt-run --no-color state.orch ceph.stage.${stage_num} 2>&1 | tee $stage_log_path
+    set +x
     echo "WWWW"
     STAGE_FINISHED=$(grep -F 'Total states run' $stage_log_path)
 
@@ -82,6 +82,7 @@ function _run_stage_non_cli {
     else
       _report_stage_failure $stage_num
     fi
+    set -ex
 }
 
 function _client_node {
