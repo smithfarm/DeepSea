@@ -69,7 +69,7 @@ function _initialize_osd_configs_array {
 
     shopt -s nullglob
     pushd $DIR >/dev/null
-    OSD_CONFIGS_ARRAY=(*)
+    OSD_CONFIGS_ARRAY=(*.yaml *.yml)
     echo "Made global array containing the following OSD configs (from ->$DIR<-):"
     printf '%s\n' "${OSD_CONFIGS_ARRAY[@]}"
     popd >/dev/null
