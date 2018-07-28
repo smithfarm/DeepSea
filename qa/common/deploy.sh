@@ -4,36 +4,7 @@
 # separate file to house the deploy_ceph function
 #
 
-function report_config {
-    if [ -n "$CLI" ] ; then
-        echo "CLI will be used"
-    else
-        echo "CLI will **NOT** be used"
-    fi
-    test "$STORAGE_PROFILE"
-    case "$STORAGE_PROFILE" in
-        default)   echo "Storage profile: bluestore OSDs (default)" ; break ;;
-        dmcrypt)   echo "Storage profile: encrypted bluestore OSDs" ; break ;;
-        filestore) echo "Storage profile: filestore OSDs"           ; break ;;
-        random)    echo "Storage profile will be chosen randomly" ; break ;;
-        *) CUSTOM_STORAGE_PROFILE="$STORAGE_PROFILE" ; STORAGE_PROFILE="custom" ; echo "Storage profile: custom ($CUSTOM_STORAGE_PROFILE)" ; break ;;
-    esac
-    if [ -n "$MIN_NODES" ] ; then
-        echo "MIN_NODES is set to $MIN_NODES"
-        PROPOSED_MIN_NODES="$MIN_NODES"
-    else
-        echo "MIN_NODES was not set. Default is 1"
-        PROPOSED_MIN_NODES=1
-    fi
-    if [ -n "$CLIENT_NODES" ] ; then
-        echo "CLIENT_NODES is set to $CLIENT_NODES"
-    else
-        echo "CLIENT_NODES was not set. Default is 0"
-        CLIENT_NODES=0
-    fi
-}
-
-function install_deps {
+function _install_deps {
     echo "Installing dependencies on the Salt Master node"
     local DEPENDENCIES="jq
     "
@@ -43,7 +14,7 @@ function install_deps {
     done
 }
 
-function global_test_init {
+function _global_test_init {
     #
     # determine hostname of Salt Master
     SALT_MASTER=$(hostname)
@@ -73,18 +44,7 @@ function global_test_init {
     fi
 }
 
-function _ping_minions_until_all_respond {
-    local NUM_MINIONS="$1"
-    local RESPONDING=""
-    for i in {1..20} ; do
-        sleep 10
-        RESPONDING=$(salt '*' test.ping 2>/dev/null | grep True 2>/dev/null | wc --lines)
-        echo "Of $NUM_MINIONS total minions, $RESPONDING are responding"
-        test "$NUM_MINIONS" -eq "$RESPONDING" && break
-    done
-}
-
-function update_salt {
+function _update_salt {
     # make sure we are running the latest Salt before Stage 0 starts,
     # otherwise Stage 0 will update Salt and then fail with cryptic
     # error messages
@@ -98,7 +58,35 @@ function update_salt {
     salt '*' saltutil.sync_all
 }
 
-function vet_nodes {
+function _initialize_storage_profile {
+    test "$STORAGE_PROFILE"
+    case "$STORAGE_PROFILE" in
+        default)   echo "Storage profile: bluestore OSDs (default)" ; break ;;
+        dmcrypt)   echo "Storage profile: encrypted bluestore OSDs" ; break ;;
+        filestore) echo "Storage profile: filestore OSDs"           ; break ;;
+        random)    echo "Storage profile will be chosen randomly"   ; break ;;
+        *)
+            CUSTOM_STORAGE_PROFILE="$STORAGE_PROFILE"
+            STORAGE_PROFILE="custom"
+            echo "Storage profile: custom ($CUSTOM_STORAGE_PROFILE)"
+            ;;
+    esac
+}
+
+function _initialize_and_vet_nodes {
+    if [ -n "$MIN_NODES" ] ; then
+        echo "MIN_NODES is set to $MIN_NODES"
+        PROPOSED_MIN_NODES="$MIN_NODES"
+    else
+        echo "MIN_NODES was not set. Default is 1"
+        PROPOSED_MIN_NODES=1
+    fi
+    if [ -n "$CLIENT_NODES" ] ; then
+        echo "CLIENT_NODES is set to $CLIENT_NODES"
+    else
+        echo "CLIENT_NODES was not set. Default is 0"
+        CLIENT_NODES=0
+    fi
     MIN_NODES=$(($CLIENT_NODES + 1))
     if [ "$PROPOSED_MIN_NODES" -lt "$MIN_NODES" ] ; then
         echo "Proposed MIN_NODES value is too low. Need at least 1 + CLIENT_NODES"
@@ -114,24 +102,24 @@ function vet_nodes {
     echo "Of these, $CLIENT_NODES will be clients (nodes without any DeepSea roles except \"admin\")."
 }
 
-function ceph_cluster_running {
-    ceph status >/dev/null 2>&1
+function initialization_sequence {
+    set +x
+    _install_deps
+    _global_test_init
+    _update_salt
+    cat_salt_config
+    _initialize_storage_profile
+    _initialize_and_vet_nodes
+    set -x
 }
 
 function deploy_ceph {
-    set +x
-    report_config
-    install_deps
-    global_test_init
-    update_salt
-    cat_salt_config
-    vet_nodes
-    set -x
-    test $CLUSTER_NODES -lt 4 && export DEV_ENV="true"
-    if ceph_cluster_running ; then
+    initialization_sequence
+    if _ceph_cluster_running ; then
         echo "Running ceph cluster detected: skipping deploy phase"
         return 0
     fi
+    test $CLUSTER_NODES -lt 4 && export DEV_ENV="true"
     disable_restart_in_stage_0
     run_stage_0 "$CLI"
     salt_api_test

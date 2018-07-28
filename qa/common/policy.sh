@@ -125,11 +125,10 @@ function random_or_custom_storage_profile {
     local SOURCEDIR="$BASEDIR/osd-config/ovh"
     _initialize_osd_configs_array $SOURCEDIR
     local SOURCEFILE=""
-    if [ "$STORAGE_PROFILE" = "random" ] ; then
-        local SOURCEFILE=$(_random_osd_config)
-    elif [ "$STORAGE_PROFILE" = "custom" ] ; then
-        local SOURCEFILE=$(_custom_osd_config)
-    fi
+    case "$STORAGE_PROFILE" in
+        random) SOURCEFILE=$(_random_osd_config) ;;
+        custom) SOURCEFILE=$(_custom_osd_config $CUSTOM_STORAGE_PROFILE) ;;
+    esac
     test "$SOURCEFILE"
     file $SOURCEDIR/$SOURCEFILE
     #
