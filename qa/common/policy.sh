@@ -92,10 +92,12 @@ function _custom_osd_config {
     local PROFILE=$1
     local FILENAME=""
     for i in "${OSD_CONFIGS_ARRAY[@]}" ; do
+        echo "comparing $PROFILE with $i"
         case "$i" in
             $PROFILE) FILENAME=$i ; break ;;
             ${PROFILE}.yaml) FILENAME=$i ; break ;;
-            ${PROFILE}.yml) FILENAME=$i ; break;
+            ${PROFILE}.yml) FILENAME=$i ; break ;;
+            *) echo "$i matches none of $PROFILE ${PROFILE}.yaml ${PROFILE}.yml" ;;
         esac
     done
     if [ -z "$FILENAME" ] ; then
