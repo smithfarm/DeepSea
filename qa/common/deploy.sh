@@ -119,6 +119,7 @@ function initialization_sequence {
     _determine_master_minion
     _os_specific_install_deps
     _os_specific_repos_and_packages_info
+    deepsea --version
     _set_deepsea_minions
     _initialize_minion_array
     _update_salt
