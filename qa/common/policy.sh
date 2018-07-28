@@ -64,6 +64,18 @@ role-mgr/cluster/*.sls slice=[:3]
 EOF
 }
 
+function _initialize_minion_configs_array {
+    local DIR=$1
+
+    shopt -s nullglob
+    pushd $DIR >/dev/null
+    MINION_CONFIGS_ARRAY=(*.yaml *.yml)
+    echo "Made global array containing the following files (from ->$DIR<-):"
+    printf '%s\n' "${MINION_CONFIGS_ARRAY[@]}"
+    popd >/dev/null
+    shopt -u nullglob
+}
+
 function _initialize_osd_configs_array {
     local DIR=$1
 
@@ -105,16 +117,9 @@ function _random_osd_config {
 function random_or_custom_storage_profile {
     test "$STORAGE_PROFILE"
     test "$STORAGE_PROFILE" = "random" -o "$STORAGE_PROFILE" = "custom"
-    local PROFILE_BASE="/srv/pillar/ceph/proposals"
-    cp -a $PROFILE_BASE/profile-default $PROFILE_BASE/profile-$STORAGE_PROFILE
-    local DESTDIR="$PROFILE_BASE/profile-random/stack/default/ceph/minions"
-    local NUMBER_OF_MINIONS=$(ls -1 $DESTDIR | wc -l)
-    if [ "$NUMBER_OF_MINIONS" -gt 1 ] ; then
-        echo "Storage profile \"random\" only works with a single minion - you have $NUMBER_OF_MINIONS minions"
-        echo "Bailing out!"
-        exit 1
-    fi
-    local DESTFILE=$(ls -1 $DESTDIR)
+    #
+    # choose OSD configuration from qa/osd-config/ovh
+    #
     local SOURCEDIR="$BASEDIR/osd-config/ovh"
     _initialize_osd_configs_array $SOURCEDIR
     local SOURCEFILE=""
@@ -125,10 +130,21 @@ function random_or_custom_storage_profile {
     fi
     test "$SOURCEFILE"
     file $SOURCEDIR/$SOURCEFILE
-    cp $SOURCEDIR/$SOURCEFILE $DESTDIR/$DESTFILE
+    #
+    # prepare new profile, which will be exactly the same as the default
+    # profile except the files in stack/default/ceph/minions/ will be
+    # overwritten with our chosen OSD configuration
+    #
+    local PROPOSALSDIR="/srv/pillar/ceph/proposals"
+    cp -a $PROPOSALSDIR/profile-default $PROPOSALSDIR/profile-$STORAGE_PROFILE
+    local DESTDIR="$PROPOSALSDIR/profile-$STORAGE_PROFILE/stack/default/ceph/minions"
+    _initialize_minion_configs_array $DESTDIR
+    for DESTFILE in "${MINION_CONFIGS_ARRAY[@]}" ; do
+        cp $SOURCEDIR/$SOURCEFILE $DESTDIR/$DESTFILE
+    done
     echo "Your $STORAGE_PROFILE storage profile $SOURCEFILE has the following contents:"
     cat $DESTDIR/$DESTFILE
-    ls -lR $PROFILE_BASE
+    ls -lR $PROPOSALSDIR
 }
 
 function policy_cfg_storage {
