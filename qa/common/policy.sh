@@ -25,7 +25,7 @@ cluster-ceph/cluster/*.sls
 config/stack/default/global.yml
 config/stack/default/ceph/cluster.yml
 # Role assignment - master
-role-master/cluster/${MASTER_MINION}*.sls
+role-master/cluster/${MASTER_MINION}.sls
 # Role assignment - admin
 role-admin/cluster/*.sls
 EOF
