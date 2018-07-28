@@ -100,8 +100,10 @@ function _client_node {
 
 function _master_has_role {
     local ROLE=$1
-    salt $(hostname) pillar.get roles
-    salt $(hostname) pillar.get roles | grep -q "$1"
+    echo "Asserting that master minion has role ->$ROLE<-"
+    salt $MASTER_MINION pillar.get roles
+    salt $MASTER_MINION pillar.get roles | grep -q "$ROLE"
+    echo "Yes, it does."
 }
 
 function _first_x_node {

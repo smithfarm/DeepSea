@@ -14,10 +14,21 @@ function _install_deps {
     done
 }
 
+function _determine_master_minion {
+    MASTER_MINION_SLS=/srv/pillar/ceph/master_minion.sls
+    if test -s $MASTER_MINION_SLS ; then
+        MASTER_MINION=$(cat $MASTER_MINION_SLS | \
+                      sed 's/.*master_minion:[[:blank:]]*\(\w\+\)[[:blank:]]*/\1/' | \
+                      grep -v '^$')
+    else
+        echo "Could not determine the Salt Master from DeepSea pillar data. Is DeepSea installed?"
+        exit 1
+    fi
+    echo "Asserting that master minion ->$MASTER_MINION<- is identical to the hostname ->$(hostname)<-"
+    test "$MASTER_MINION" = "$(hostname)"
+}
+
 function _global_test_init {
-    #
-    # determine hostname of Salt Master
-    SALT_MASTER=$(hostname)
     #
     # show which repos are active/enabled
     zypper lr -upEP
@@ -104,6 +115,7 @@ function _initialize_and_vet_nodes {
 
 function initialization_sequence {
     set +x
+    _determine_master_minion
     _install_deps
     _global_test_init
     _update_salt

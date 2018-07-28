@@ -269,7 +269,7 @@ function ceph_health_test {
 function salt_api_test {
     echo "Salt API test: BEGIN"
     systemctl status salt-api.service
-    curl http://${SALT_MASTER}:8000/ | python3 -m json.tool
+    curl http://$(hostname):8000/ | python3 -m json.tool
     echo "Salt API test: END"
 }
 
@@ -279,18 +279,11 @@ function rados_write_test {
     # created by calling e.g. "create_all_pools_at_once write_test" immediately
     # before calling this function.
     #
-    local TESTSCRIPT=/tmp/test_rados_put.sh
-    cat << 'EOF' > $TESTSCRIPT
-set -ex
-trap 'echo "Result: NOT_OK"' ERR
-ceph osd pool application enable write_test deepsea_qa
-echo "dummy_content" > verify.txt
-rados -p write_test put test_object verify.txt
-rados -p write_test get test_object verify_returned.txt
-test "x$(cat verify.txt)" = "x$(cat verify_returned.txt)"
-echo "Result: OK"
-EOF
-    _run_test_script_on_node $TESTSCRIPT $SALT_MASTER
+    ceph osd pool application enable write_test deepsea_qa
+    echo "dummy_content" > verify.txt
+    rados -p write_test put test_object verify.txt
+    rados -p write_test get test_object verify_returned.txt
+    test "x$(cat verify.txt)" = "x$(cat verify_returned.txt)"
 }
 
 function cephfs_mount_and_sanity_test {
