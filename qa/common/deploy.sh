@@ -4,13 +4,13 @@
 # separate file to house the deploy_ceph function
 #
 
-function _install_deps {
+function _os_specific_install_deps {
     echo "Installing dependencies on the Salt Master node"
     local DEPENDENCIES="jq
     "
-    zypper_ref
+    _zypper_ref
     for d in $DEPENDENCIES ; do
-        zypper --non-interactive install --no-recommends $d
+        _zypper_install $d
     done
 }
 
@@ -28,10 +28,8 @@ function _determine_master_minion {
     test "$MASTER_MINION" = "$(hostname)"
 }
 
-function _global_test_init {
-    #
-    # show which repos are active/enabled
-    zypper lr -upEP
+function _os_specific_repos_and_packages_info {
+    _dump_salt_master_zypper_repos
     #
     # show salt RPM version in log and fail if salt is not installed
     rpm -q salt-master
@@ -40,15 +38,25 @@ function _global_test_init {
     #
     # show deepsea RPM version in case deepsea was installed from RPM
     rpm -q deepsea || true
+}
+
+function _set_deepsea_minions {
     #
     # set deepsea_minions to * - see https://github.com/SUSE/DeepSea/pull/526
     # (otherwise we would have to set deepsea grain on all minions)
     echo "deepsea_minions: '*'" > /srv/pillar/ceph/deepsea_minions.sls
     cat /srv/pillar/ceph/deepsea_minions.sls
-    #
-    # get list of minions
+}
+
+function _initialize_minion_array {
+    local m=
+    local i=0
     if type salt-key > /dev/null 2>&1; then
-        MINIONS_LIST=$(salt-key -L -l acc | grep -v '^Accepted Keys')
+        MINION_LIST=$(salt-key -L -l acc | grep -v '^Accepted Keys')
+        for m in $MINION_LIST ; do
+            MINION_ARRAY[0]=$m
+            i=$((i+1))
+        done
     else
         echo "Cannot find salt-key. Is Salt installed? Is this running on the Salt Master?"
         exit 1
@@ -116,8 +124,10 @@ function _initialize_and_vet_nodes {
 function initialization_sequence {
     set +x
     _determine_master_minion
-    _install_deps
-    _global_test_init
+    _os_specific_install_deps
+    _os_specific_repos_and_packages_info
+    _set_deepsea_minions
+    _initialize_minion_array
     _update_salt
     cat_salt_config
     _initialize_storage_profile

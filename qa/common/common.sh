@@ -11,6 +11,7 @@ source $BASEDIR/common/policy.sh
 source $BASEDIR/common/pool.sh
 source $BASEDIR/common/rbd.sh
 source $BASEDIR/common/rgw.sh
+source $BASEDIR/common/zypper.sh
 
 
 #
@@ -28,19 +29,6 @@ function assert_enhanced_getopt {
     fi
     echo "PASS"
     set -e
-}
-
-#
-# functions that set up the Salt Master node so it can run these tests
-#
-
-function zypper_ref {
-    set +x
-    for delay in 60 60 60 60 ; do
-        zypper --non-interactive --gpg-auto-import-keys refresh && break
-        sleep $delay
-    done
-    set -x
 }
 
 
