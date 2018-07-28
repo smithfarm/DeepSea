@@ -15,28 +15,17 @@ function _os_specific_install_deps {
 }
 
 function _determine_master_minion {
-    MASTER_MINION_SLS=/srv/pillar/ceph/master_minion.sls
-    if test -s $MASTER_MINION_SLS ; then
-        MASTER_MINION=$(cat $MASTER_MINION_SLS | \
-                      sed 's/.*master_minion:[[:blank:]]*\(\w\+\)[[:blank:]]*/\1/' | \
-                      grep -v '^$')
-    else
-        echo "Could not determine the Salt Master from DeepSea pillar data. Is DeepSea installed?"
-        exit 1
-    fi
-    echo "Asserting that master minion ->$MASTER_MINION<- is identical to the hostname ->$(hostname)<-"
-    test "$MASTER_MINION" = "$(hostname)"
+    type hostname
+    MASTER_MINION=$(hostname)
+    salt $MASTER_MINION test.ping
 }
 
 function _os_specific_repos_and_packages_info {
     _dump_salt_master_zypper_repos
-    #
-    # show salt RPM version in log and fail if salt is not installed
+    type rpm
     rpm -q salt-master
     rpm -q salt-minion
     rpm -q salt-api
-    #
-    # show deepsea RPM version in case deepsea was installed from RPM
     rpm -q deepsea || true
 }
 
@@ -49,11 +38,13 @@ function _set_deepsea_minions {
 }
 
 function _initialize_minion_array {
+    set +x
     local m=
     local i=0
     if type salt-key > /dev/null 2>&1; then
         MINION_LIST=$(salt-key -L -l acc | grep -v '^Accepted Keys')
         for m in $MINION_LIST ; do
+            echo "Adding minion $m to minion array"
             MINION_ARRAY[0]=$m
             i=$((i+1))
         done
@@ -61,6 +52,8 @@ function _initialize_minion_array {
         echo "Cannot find salt-key. Is Salt installed? Is this running on the Salt Master?"
         exit 1
     fi
+    echo "There are $i minions in this Salt cluster"
+    set -x
 }
 
 function _update_salt {
