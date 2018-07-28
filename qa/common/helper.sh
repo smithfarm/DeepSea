@@ -111,6 +111,22 @@ function _first_x_node {
     salt --static --out json -C "I@roles:$ROLE" test.ping | jq -r 'keys[0]'
 }
 
+function _first_storage_only_node {
+    local COMPOUND_TARGET="I@roles:storage"
+    local NOT_ROLES="mon
+mgr
+mds
+rgw
+igw
+ganesha
+"
+    local ROLE=
+    for ROLE in $NOT_ROLES ; do
+        COMPOUND_TARGET="$COMPOUND_TARGET and not I@roles:$ROLE"
+    done
+    salt --static --out json -C "$COMPOUND_TARGET" test.ping | jq -r 'keys[0]'
+}
+
 function _run_test_script_on_node {
     local TESTSCRIPT=$1 # on success, TESTSCRIPT must output the exact string
                         # "Result: OK" on a line by itself, otherwise it will
