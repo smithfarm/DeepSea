@@ -36,16 +36,16 @@ EOF
 
 function policy_cfg_mon_flex {
   test -n "$TOTAL_NODES" # set in initialization_sequence
-  if [ "$TOTALNODES" -eq 1 ] ; then
+  if [ "$TOTAL_NODES" -eq 1 ] ; then
     echo "Only one node in cluster; deploying 1 mon and 1 mgr"
     policy_cfg_one_mon
-  elif [ "$TOTALNODES" -eq 2 ] ; then
+  elif [ "$TOTAL_NODES" -eq 2 ] ; then
     echo "2-node cluster; deploying 1 mon and 1 mgr"
     policy_cfg_one_mon
-  elif [ "$TOTALNODES" -ge 3 ] ; then
+  elif [ "$TOTAL_NODES" -ge 3 ] ; then
     policy_cfg_three_mons
   else
-    echo "Unexpected number of nodes ->$TOTALNODES<-: bailing out!"
+    echo "INTERNAL ERROR: unexpected number of nodes ->$TOTAL_NODES<-"
     exit 1
   fi
 }
