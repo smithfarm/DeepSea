@@ -138,7 +138,7 @@ function deploy_ceph {
         echo "Running ceph cluster detected: skipping deploy phase"
         return 0
     fi
-    test $CLUSTER_NODES -lt 4 && export DEV_ENV="true"
+    test $STORAGE_NODES -lt 4 && export DEV_ENV="true"
     disable_restart_in_stage_0
     run_stage_0 "$CLI"
     salt_api_test
