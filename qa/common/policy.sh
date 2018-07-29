@@ -35,10 +35,10 @@ EOF
 }
 
 function policy_cfg_mon_flex {
-  test -n "$TOTAL_NODES" # set in initialization_sequence
-  test "$TOTAL_NODES" -gt 0
-  if [ "$TOTAL_NODES" -lt 4 ] ; then
-    echo "Undersized cluster ($TOTAL_NODES nodes)"
+  test -n "$STORAGE_NODES" # set in initialization_sequence
+  test "$STORAGE_NODES" -gt 0
+  if [ "$STORAGE_NODES" -lt 4 ] ; then
+    echo "Undersized cluster ($STORAGE_NODES nodes)"
     policy_cfg_one_mon
   else
     policy_cfg_three_mons
