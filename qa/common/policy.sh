@@ -168,6 +168,22 @@ EOF
     fi
 }
 
+function policy_remove_storage_node {
+    local NODE_TO_DELETE=$1
+    local PROPOSALSDIR="/srv/pillar/ceph/proposals"
+
+    echo "Before"
+    ls $PROPOSALSDIR/profile-$STORAGE_PROFILE/cluster/*.sls
+    ls $PROPOSALSDIR/profile-$STORAGE_PROFILE/stack/default/ceph/minions/*.yml
+
+    rm -f $PROPOSALSDIR/profile-$STORAGE_PROFILE/cluster/${NODE_TO_DELETE}.sls
+    rm -f $PROPOSALSDIR/profile-$STORAGE_PROFILE/stack/default/ceph/minions/${NODE_TO_DELETE}.yml
+
+    echo "After"
+    ls $PROPOSALSDIR/profile-$STORAGE_PROFILE/cluster/*.sls
+    ls $PROPOSALSDIR/profile-$STORAGE_PROFILE/stack/default/ceph/minions/*.yml
+}
+
 function policy_cfg_mds {
     test -n "$CLIENT_NODES"
 
