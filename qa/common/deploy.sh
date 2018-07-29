@@ -8,9 +8,9 @@ function _os_specific_install_deps {
     echo "Installing dependencies on the Salt Master node"
     local DEPENDENCIES="jq
     "
-    _zypper_ref
+    _zypper_ref_on_master
     for d in $DEPENDENCIES ; do
-        _zypper_install $d
+        _zypper_install_on_master $d
     done
 }
 
