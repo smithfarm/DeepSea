@@ -173,15 +173,17 @@ function policy_remove_storage_node {
     local NODE_TO_DELETE=$1
 
     echo "Before"
-    ls $PROPOSALSDIR/profile-$STORAGE_PROFILE/cluster/*.sls
-    ls $PROPOSALSDIR/profile-$STORAGE_PROFILE/stack/default/ceph/minions/*.yml
+    ls -1 $PROPOSALSDIR/profile-$STORAGE_PROFILE/cluster/
+    ls -1 $PROPOSALSDIR/profile-$STORAGE_PROFILE/stack/default/ceph/minions/
 
-    rm -f $PROPOSALSDIR/profile-$STORAGE_PROFILE/cluster/${NODE_TO_DELETE}.sls
-    rm -f $PROPOSALSDIR/profile-$STORAGE_PROFILE/stack/default/ceph/minions/${NODE_TO_DELETE}.yml
+    local basedirsls=$PROPOSALSDIR/profile-$STORAGE_PROFILE/cluster
+    local basediryml=$PROPOSALSDIR/profile-$STORAGE_PROFILE/stack/default/ceph/minions
+    mv $basedirsls/${NODE_TO_DELETE}.sls $basedirsls/${NODE_TO_DELETE}.sls-DISABLED
+    mv $basediryml/${NODE_TO_DELETE}.yml $basedirsls/${NODE_TO_DELETE}.yml-DISABLED
 
     echo "After"
-    ls $PROPOSALSDIR/profile-$STORAGE_PROFILE/cluster/*.sls
-    ls $PROPOSALSDIR/profile-$STORAGE_PROFILE/stack/default/ceph/minions/*.yml
+    ls -1 $PROPOSALSDIR/profile-$STORAGE_PROFILE/cluster/
+    ls -1 $PROPOSALSDIR/profile-$STORAGE_PROFILE/stack/default/ceph/minions/
 }
 
 function policy_cfg_mds {
