@@ -119,6 +119,7 @@ mds
 rgw
 igw
 ganesha
+master
 "
     local ROLE=
     for ROLE in $NOT_ROLES ; do

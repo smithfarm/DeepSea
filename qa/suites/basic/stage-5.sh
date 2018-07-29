@@ -95,7 +95,7 @@ _initialize_and_vet_nodes
 NODE_TO_DELETE=$(_first_storage_only_node)
 echo "Preparing to remove storage node ->$NODE_TO_DELETE<-"
 set -x
-_remove_storage_node $NODE_TO_DELETE
+policy_remove_storage_node $NODE_TO_DELETE
 run_stage_2 "$CLI"
 ceph_cluster_status
 run_stage_5 "$CLI"
