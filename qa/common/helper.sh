@@ -90,7 +90,6 @@ function _run_stage_non_cli {
         _report_stage_failure $stage_num
     fi
     echo "WWWW"
-    echo "********** Stage $stage_num completed successfully **********"
     set -ex
 }
 
