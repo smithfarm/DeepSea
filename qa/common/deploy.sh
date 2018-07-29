@@ -106,7 +106,7 @@ function _initialize_and_vet_nodes {
     fi
     test "$PROPOSED_MIN_NODES" -gt "$MIN_NODES" && MIN_NODES="$PROPOSED_MIN_NODES"
     echo "Final MIN_NODES is $MIN_NODES"
-    TOTAL_NODES=$(json_total_nodes)
+    test -n "$TOTAL_NODES" # set in _update_salt
     test "$TOTAL_NODES" -ge "$MIN_NODES"
     CLUSTER_NODES=$(($TOTAL_NODES - $CLIENT_NODES))
     echo "WWWW"

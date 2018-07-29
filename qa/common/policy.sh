@@ -35,8 +35,7 @@ EOF
 }
 
 function policy_cfg_mon_flex {
-  local TOTALNODES=$(json_total_nodes)
-  test -n "$TOTALNODES"
+  test -n "$TOTAL_NODES" # set in initialization_sequence
   if [ "$TOTALNODES" -eq 1 ] ; then
     echo "Only one node in cluster; deploying 1 mon and 1 mgr"
     policy_cfg_one_mon
