@@ -61,13 +61,13 @@ function _update_salt {
     # otherwise Stage 0 will update Salt and then fail with cryptic
     # error messages
     TOTAL_NODES=$(json_total_nodes)
-    salt '*' cmd.run 'zypper -n in -f python3-salt salt salt-api salt-master salt-minion'
+    salt '*' cmd.run 'zypper -n in -f python3-salt salt salt-api salt-master salt-minion' 2>/dev/null
     systemctl restart salt-api.service
     systemctl restart salt-master.service
     sleep 15
-    salt '*' cmd.run 'systemctl restart salt-minion'
+    salt '*' cmd.run 'systemctl restart salt-minion' 2>/dev/null
     _ping_minions_until_all_respond "$TOTAL_NODES"
-    salt '*' saltutil.sync_all
+    salt '*' saltutil.sync_all 2>/dev/null
 }
 
 function _initialize_storage_profile {
