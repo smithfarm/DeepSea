@@ -203,6 +203,10 @@ function admin_auth_status {
     cat /etc/ceph/ceph.client.admin.keyring
 }
 
+function number_of_hosts_in_ceph_osd_tree {
+    ceph osd tree -f json-pretty
+}
+
 function ceph_cluster_status {
     ceph pg stat -f json-pretty
     _grace_period 1

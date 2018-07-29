@@ -68,6 +68,10 @@ echo "stage-5.sh running with the following configuration:"
 test -n "$CLI" && echo "- CLI"
 set -x
 
+# double-check there is a healthy cluster
+ceph_health_test
+number_of_hosts_in_ceph_osd_tree
+
 # modify storage profile
 STORAGE_PROFILE=$(storage_profile_from_policy_cfg)
 policy_remove_storage_node $(_first_storage_only_node)
@@ -80,6 +84,7 @@ ceph_cluster_status
 
 # verification phase
 ceph_health_test
+number_of_hosts_in_ceph_osd_tree
 salt -I roles:storage osd.report
 
 echo "YYYY"
