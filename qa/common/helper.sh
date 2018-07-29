@@ -4,6 +4,8 @@
 # helper functions (not to be called directly from test scripts)
 #
 
+STAGE_TIMEOUT_DURATION="30m"
+
 function _report_stage_failure {
     STAGE_SUCCEEDED=""
     local stage_num=$1
@@ -37,7 +39,8 @@ function _run_stage_cli {
 
     set +e
     set -x
-    deepsea \
+    timeout $STAGE_TIMEOUT_DURATION \
+        deepsea \
         --log-file=/var/log/salt/deepsea.log \
         --log-level=debug \
         stage \
@@ -49,6 +52,10 @@ function _run_stage_cli {
     set +x
     echo "deepsea exit status: $exit_status"
     echo "WWWW"
+    if [ "$exit_status" = "124" ] ; then
+        echo "Stage $stage_num timed out after $STAGE_TIMEOUT_DURATION"
+        exit 1
+    fi
     if [ "$exit_status" != "0" ] ; then
         _report_stage_failure $stage_num
         set -ex
@@ -69,8 +76,17 @@ function _run_stage_non_cli {
 
     set +e
     set -x
-    salt-run --no-color state.orch ceph.stage.${stage_num} 2>/dev/null | tee $stage_log_path
+    timeout $STAGE_TIMEOUT_DURATION \
+        salt-run \
+        --no-color \
+        state.orch \
+        ceph.stage.${stage_num} \
+        2>/dev/null | tee $stage_log_path
     local exit_status="${PIPESTATUS[0]}"
+    if [ "$exit_status" = "124" ] ; then
+        echo "Stage $stage_num timed out after $STAGE_TIMEOUT_DURATION"
+        exit 1
+    fi
     if [ "$exit_status" != "0" ] ; then
         _report_stage_failure $stage_num
         set -e
