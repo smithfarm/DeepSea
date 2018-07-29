@@ -4,6 +4,9 @@
 # functions for generating storage proposals
 #
 
+PROPOSALSDIR="/srv/pillar/ceph/proposals"
+POLICY_CFG="$PROPOSALSDIR/policy.cfg"
+
 function proposal_populate_dmcrypt {
     salt-run proposal.populate encryption='dmcrypt' name='dmcrypt'
 }
@@ -18,7 +21,7 @@ function proposal_populate_filestore {
 #
 
 function policy_cfg_base {
-  cat <<EOF > /srv/pillar/ceph/proposals/policy.cfg
+  cat <<EOF > $POLICY_CFG
 # Cluster assignment
 cluster-ceph/cluster/*.sls
 # Common configuration
@@ -49,7 +52,7 @@ function policy_cfg_mon_flex {
 }
 
 function policy_cfg_one_mon {
-  cat <<EOF >> /srv/pillar/ceph/proposals/policy.cfg
+  cat <<EOF >> $POLICY_CFG
 # Role assignment - 1 mon, 1 mgr
 role-mon/cluster/*.sls slice=[:1]
 role-mgr/cluster/*.sls slice=[:1]
@@ -57,7 +60,7 @@ EOF
 }
 
 function policy_cfg_three_mons {
-  cat <<EOF >> /srv/pillar/ceph/proposals/policy.cfg
+  cat <<EOF >> $POLICY_CFG
 # Role assignment - 3 mons, 3 mgrs
 role-mon/cluster/*.sls slice=[:3]
 role-mgr/cluster/*.sls slice=[:3]
@@ -134,7 +137,6 @@ function random_or_custom_storage_profile {
     # profile except the files in stack/default/ceph/minions/ will be
     # overwritten with our chosen OSD configuration
     #
-    local PROPOSALSDIR="/srv/pillar/ceph/proposals"
     cp -a $PROPOSALSDIR/profile-default $PROPOSALSDIR/profile-$STORAGE_PROFILE
     local DESTDIR="$PROPOSALSDIR/profile-$STORAGE_PROFILE/stack/default/ceph/minions"
     _initialize_minion_configs_array $DESTDIR
@@ -151,13 +153,13 @@ function policy_cfg_storage {
     test -n "$STORAGE_PROFILE"
 
     if [ "$CLIENT_NODES" -eq 0 ] ; then
-        cat <<EOF >> /srv/pillar/ceph/proposals/policy.cfg
+        cat <<EOF >> $POLICY_CFG
 # Hardware Profile
 profile-$STORAGE_PROFILE/cluster/*.sls
 profile-$STORAGE_PROFILE/stack/default/ceph/minions/*yml
 EOF
     elif [ "$CLIENT_NODES" -ge 1 ] ; then
-        cat <<EOF >> /srv/pillar/ceph/proposals/policy.cfg
+        cat <<EOF >> $POLICY_CFG
 # Hardware Profile
 profile-$STORAGE_PROFILE/cluster/*.sls slice=[:-$CLIENT_NODES]
 profile-$STORAGE_PROFILE/stack/default/ceph/minions/*yml slice=[:-$CLIENT_NODES]
@@ -168,9 +170,13 @@ EOF
     fi
 }
 
+function storage_profile_from_policy_cfg {
+    local BUFFER=$(grep --max-count 1 '^profile-' $POLICY_CFG)
+    perl -e '"'"$BUFFER"'" =~ m/profile-(\w+)/; print "$1\n";'
+}
+
 function policy_remove_storage_node {
     local NODE_TO_DELETE=$1
-    local PROPOSALSDIR="/srv/pillar/ceph/proposals"
 
     echo "Before"
     ls $PROPOSALSDIR/profile-$STORAGE_PROFILE/cluster/*.sls
@@ -188,12 +194,12 @@ function policy_cfg_mds {
     test -n "$CLIENT_NODES"
 
     if [ "$CLIENT_NODES" -eq 0 ] ; then
-        cat <<EOF >> /srv/pillar/ceph/proposals/policy.cfg
+        cat <<EOF >> $POLICY_CFG
 # Role assignment - mds (all nodes)
 role-mds/cluster/*.sls
 EOF
     elif [ "$CLIENT_NODES" -ge 1 ] ; then
-        cat <<EOF >> /srv/pillar/ceph/proposals/policy.cfg
+        cat <<EOF >> $POLICY_CFG
 # Role assignment - mds (all non-client nodes)
 role-mds/cluster/*.sls slice=[:-$CLIENT_NODES]
 EOF
@@ -205,12 +211,12 @@ EOF
 
 function policy_cfg_rgw {
     if [ -z "$SSL" ] ; then
-        cat <<EOF >> /srv/pillar/ceph/proposals/policy.cfg
+        cat <<EOF >> $POLICY_CFG
 # Role assignment - rgw (first node)
 role-rgw/cluster/*.sls slice=[:1]
 EOF
     else
-        cat <<EOF >> /srv/pillar/ceph/proposals/policy.cfg
+        cat <<EOF >> $POLICY_CFG
 # Role assignment - rgw (first node)
 role-rgw/cluster/*.sls slice=[:1]
 role-rgw-ssl/cluster/*.sls slice=[:1]
@@ -219,14 +225,14 @@ EOF
 }
 
 function policy_cfg_igw {
-    cat <<EOF >> /srv/pillar/ceph/proposals/policy.cfg
+    cat <<EOF >> $POLICY_CFG
 # Role assignment - igw (first node)
 role-igw/cluster/*.sls slice=[:1]
 EOF
 }
 
 function policy_cfg_nfs_ganesha {
-    cat <<EOF >> /srv/pillar/ceph/proposals/policy.cfg
+    cat <<EOF >> $POLICY_CFG
 # Role assignment - NFS-Ganesha (first node)
 role-ganesha/cluster/*.sls slice=[:1]
 EOF
