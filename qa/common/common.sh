@@ -195,7 +195,7 @@ function cat_global_conf {
 }
 
 function cat_ceph_conf {
-    salt '*' cmd.run "cat /etc/ceph/ceph.conf"
+    salt '*' cmd.run "cat /etc/ceph/ceph.conf" 2>/dev/null
 }
 
 function admin_auth_status {
@@ -251,7 +251,7 @@ function ceph_version_test {
 function ceph_health_test {
     local LOGFILE=/tmp/ceph_health_test.log
     echo "Waiting up to 15 minutes for HEALTH_OK..."
-    salt -C 'I@roles:master' wait.until status=HEALTH_OK timeout=900 check=1 | tee $LOGFILE
+    salt -C 'I@roles:master' wait.until status=HEALTH_OK timeout=900 check=1 2>/dev/null | tee $LOGFILE
     # last line: determines return value of function
     ! grep -q 'Timeout expired' $LOGFILE
 }
@@ -438,7 +438,7 @@ EOF
 }
 
 function configure_all_OSDs_to_filestore {
-    salt-run proposal.populate format=filestore name=filestore 
+    salt-run proposal.populate format=filestore name=filestore 2>/dev/null
     chown salt:salt /srv/pillar/ceph/proposals/policy.cfg
     sed -i 's/profile-default/profile-filestore/g' /srv/pillar/ceph/proposals/policy.cfg
 }
@@ -463,10 +463,10 @@ function check_OSD_type {
 }
 
 function migrate_to_bluestore {
-    salt-run state.orch ceph.migrate.policy
+    salt-run state.orch ceph.migrate.policy 2>/dev/null
     sed -i 's/profile-filestore/migrated-profile-filestore/g' /srv/pillar/ceph/proposals/policy.cfg
-    salt-run disengage.safety
-    salt-run state.orch ceph.migrate.osds
+    salt-run disengage.safety 2>/dev/null
+    salt-run state.orch ceph.migrate.osds 2>/dev/null
 }
 
 function _disable_restart_in_stage_0_with_update {
