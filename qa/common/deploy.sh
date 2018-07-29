@@ -73,10 +73,10 @@ function _update_salt {
 function _initialize_storage_profile {
     test "$STORAGE_PROFILE"
     case "$STORAGE_PROFILE" in
-        default)   echo "Storage profile: bluestore OSDs (default)" ; break ;;
-        dmcrypt)   echo "Storage profile: encrypted bluestore OSDs" ; break ;;
-        filestore) echo "Storage profile: filestore OSDs"           ; break ;;
-        random)    echo "Storage profile will be chosen randomly"   ; break ;;
+        default)   echo "Storage profile: bluestore OSDs (default)" ;;
+        dmcrypt)   echo "Storage profile: encrypted bluestore OSDs" ;;
+        filestore) echo "Storage profile: filestore OSDs"           ;;
+        random)    echo "Storage profile will be chosen randomly"   ;;
         *)
             CUSTOM_STORAGE_PROFILE="$STORAGE_PROFILE"
             STORAGE_PROFILE="custom"
