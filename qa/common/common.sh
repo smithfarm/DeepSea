@@ -205,7 +205,7 @@ function admin_auth_status {
 }
 
 function number_of_hosts_in_ceph_osd_tree {
-    ceph osd tree -f json-pretty
+    ceph osd tree -f json-pretty | jq '[.nodes[] | select(.type == "host")] | length'
 }
 
 function ceph_cluster_status {

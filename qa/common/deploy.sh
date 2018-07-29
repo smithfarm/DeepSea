@@ -108,7 +108,7 @@ function _initialize_and_vet_nodes {
     echo "Final MIN_NODES is $MIN_NODES"
     test -n "$TOTAL_NODES" # set in _update_salt
     test "$TOTAL_NODES" -ge "$MIN_NODES"
-    CLUSTER_NODES=$(($TOTAL_NODES - $CLIENT_NODES))
+    STORAGE_NODES=$((TOTAL_NODES - CLIENT_NODES))
     echo "WWWW"
     echo "This script will use DeepSea to deploy a cluster of $TOTAL_NODES nodes total (including Salt Master)."
     echo "Of these, $CLIENT_NODES will be clients (nodes without any DeepSea roles except \"admin\")."
