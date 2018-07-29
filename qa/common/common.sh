@@ -56,7 +56,7 @@ function run_stage_2 {
     # This was needed with SCC repos
     #salt '*' cmd.run "for delay in 60 60 60 60 ; do sudo zypper --non-interactive --gpg-auto-import-keys refresh && break ; sleep $delay ; done"
     _run_stage 2 "$@"
-    salt_pillar_items
+    salt_pillar_items 2>/dev/null
     test "$STAGE_SUCCEEDED"
 }
 
