@@ -71,8 +71,11 @@ set -x
 # double-check there is a healthy cluster
 ceph_health_test
 STORAGE_NODES_BEFORE=$(number_of_hosts_in_ceph_osd_tree)
+OSDS_BEFORE=$(number_of_osds_in_ceph_osd_tree)
 test "$STORAGE_NODES_BEFORE"
+test "$OSDS_BEFORE"
 test "$STORAGE_NODES_BEFORE" -gt 1
+test "$OSDS_BEFORE" -gt 0
 
 # modify storage profile
 STORAGE_PROFILE=$(storage_profile_from_policy_cfg)
@@ -87,7 +90,11 @@ ceph_cluster_status
 # verification phase
 ceph_health_test
 STORAGE_NODES_AFTER=$(number_of_hosts_in_ceph_osd_tree)
+OSDS_AFTER=$(number_of_osds_in_ceph_osd_tree)
+test "$STORAGE_NODES_BEFORE"
+test "$OSDS_BEFORE"
 test "$STORAGE_NODES_AFTER" -eq "$((STORAGE_NODES_BEFORE - 1))"
+test "$OSDS_AFTER" -lt "$OSDS_BEFORE"
 
 # osd.report for good measure
 salt -I roles:storage osd.report 2>/dev/null

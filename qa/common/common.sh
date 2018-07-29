@@ -208,6 +208,10 @@ function number_of_hosts_in_ceph_osd_tree {
     ceph osd tree -f json-pretty | jq '[.nodes[] | select(.type == "host")] | length'
 }
 
+function number_of_osds_in_ceph_osd_tree {
+    ceph osd tree -f json-pretty | jq '[.nodes[] | select(.type == "osd")] | length'
+}
+
 function ceph_cluster_status {
     ceph pg stat -f json-pretty
     _grace_period 1
