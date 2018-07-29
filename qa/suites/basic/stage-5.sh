@@ -83,7 +83,12 @@ test "$OSDS_BEFORE" -gt 0
 
 # modify storage profile
 STORAGE_PROFILE=$(storage_profile_from_policy_cfg)
-policy_remove_storage_node $(_first_storage_only_node)
+FIRST_STORAGE_ONLY_NODE=$(_first_storage_only_node)
+ls -lR $PROPOSALSDIR
+PROPOSALS_BEFORE=$(find $PROPOSALSDIR -name \*$FIRST_STORAGE_ONLY_NODE\* | wc --lines)
+policy_remove_storage_node $FIRST_STORAGE_ONLY_NODE
+ls -lR $PROPOSALSDIR
+PROPOSALS_AFTER=$(find $PROPOSALSDIR -name \*$FIRST_STORAGE_ONLY_NODE\* | wc --lines)
 
 # run stages 2 and 5
 run_stage_2 "$CLI"
