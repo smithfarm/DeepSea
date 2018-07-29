@@ -110,23 +110,20 @@ function ceph_conf_small_cluster {
     local STORAGENODES=$(json_storage_nodes)
     test -n "$STORAGENODES"
     if [ "$STORAGENODES" -eq 1 ] ; then
-        # 1 node, 2 OSDs
         echo "Adjusting ceph.conf for operation with 1 storage node"
         cat <<'EOF' >> /srv/salt/ceph/configuration/files/ceph.conf.d/global.conf
 mon pg warn min per osd = 16
 osd pool default size = 2
 osd crush chooseleaf type = 0 # failure domain == osd
 EOF
-    elif [ "$STORAGENODES" -eq 2 ] ; then
-        # 2 nodes, 4 OSDs
-        echo "Adjusting ceph.conf for operation with 2 storage nodes"
+    elif [ "$STORAGENODES" -eq 2 -o "$STORAGENODES" -eq 3 ] ; then
+        echo "Adjusting ceph.conf for operation with 2 or 3 storage nodes"
         cat <<'EOF' >> /srv/salt/ceph/configuration/files/ceph.conf.d/global.conf
 mon pg warn min per osd = 8
 osd pool default size = 2
 EOF
     else
-        echo "Three or more storage nodes; not adjusting ceph.conf"
-        # TODO: look up default value of "mon pg warn min per osd"
+        echo "Four or more storage nodes; not adjusting ceph.conf"
     fi
 }
 
