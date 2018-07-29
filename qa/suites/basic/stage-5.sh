@@ -6,13 +6,17 @@
 # an existing Ceph cluster.
 #
 # In addition to the assumptions contained in qa/README, this script assumes
-# that (1) DeepSea has already been used to deploy a cluster, (2) the
-# cluster has at least one "storage-only" node (i.e. a node with role "storage"
-# and no other roles (except possibly "admin")), and (3) the cluster will
-# be able to reach HEALTH_OK without one storage-only node.
+# that:
+# 1. DeepSea has already been used to deploy a cluster,
+# 2. the cluster has at least one "storage-only" node (i.e. a node with role
+#    "storage" and no other roles (except possibly "admin")), and
+# 3. the cluster will be able to reach HEALTH_OK after one storage-only node
+#    is dropped (typically this means the cluster needs at least 3 storage
+#    nodes to start with).
 #
-# On success (HEALTH_OK is reached), the script returns 0. On failure, for
-# whatever reason, the script returns non-zero.
+# On success (HEALTH_OK is reached, number of storage nodes went down by 1,
+# number of OSDs decreased), the script returns 0. On failure, for whatever
+# reason, the script returns non-zero.
 #
 # The script produces verbose output on stdout, which can be captured for later
 # forensic analysis.
