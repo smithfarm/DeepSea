@@ -857,7 +857,7 @@ install: copy-files setup.py
 
 rpm: pyc tarball
 	sed '/^Version:/s/[^ ]*$$/'$(VERSION)'/' deepsea.spec.in > deepsea.spec
-	rpmbuild -bb deepsea.spec
+	rpmbuild --buildroot ${HOME} -bb deepsea.spec
 
 # Removing test dependency until resolved
 tarball:
