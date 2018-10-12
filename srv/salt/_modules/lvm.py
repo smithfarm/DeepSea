@@ -4,6 +4,7 @@
 lvm management
 """
 
+import json
 import logging
 import random
 import subprocess
@@ -55,3 +56,27 @@ def _create_pv(device):
                                               device])
     __salt__['lvm.pvcreate']('{}1'.format(device))
     return '{}1'.format(device)
+
+
+def remove(**kwargs):
+    _remove_lvs_and_vgs()
+    _remove_pvs()
+    _zap_parts()
+
+
+def _remove_lvs_and_vgs():
+    _rc, out, _err = __salt__['helper.run'](['lvs', '--reportformat', 'json'])
+    lvs = json.loads(out)
+    vg_names = ['{}'.format(lv['vg_name']) for lv in lvs['report'][0]['lv']]
+    _rc, _out, _err = __salt__['helper.run'](['vgremove', '-y'] + vg_names)
+
+def _remove_pvs():
+    _rc, out, _err = __salt__['helper.run'](['pvs', '--reportformat', 'json'])
+    pvs = json.loads(out)
+    pv_names = ['{}'.format(pv['pv_name']) for pv in pvs['report'][0]['pv']]
+    _rc, _out, _err = __salt__['helper.run'](['pvremove', '-y'] + pv_names)
+
+
+def _zap_parts():
+    for device in configured():
+        _rc, _out, _err = __salt__['helper.run'](['sgdisk', '-Z', device])
