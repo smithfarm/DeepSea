@@ -2078,6 +2078,25 @@ def is_partitioned(device):
     osdc = OSDCommands(config)
     return osdc.is_partitioned(device)
 
+def deploy_lvm():
+    """
+    Dummy implementation to deplioy a ceph-volume OSD on an existing lv
+    """
+    _rc, out, _err = __salt__['helper.run'](['lvs', '--reportformat', 'json'])
+    lvs = json.loads(out)
+    for lv in lvs['report'][0]['lv']:
+        _rc, _out, _err = __salt__['helper.run'](['ceph-volume',
+                                                  'lvm',
+                                                  'prepare',
+                                                  '--bluestore',
+                                                  '--data',
+                                                  '{}/{}'.format(lv['vg_name'],
+                                                                 lv['lv_name'])])
+    _rc, _out, _err = __salt__['helper.run'](['ceph-volume',
+                                              'lvm',
+                                              'activate',
+                                              '--all'])
+
 
 def deploy():
     """
