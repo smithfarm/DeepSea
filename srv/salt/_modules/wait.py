@@ -54,7 +54,7 @@ class HealthCheck(object):
 
     def _wait(self, cmd, success):
         """
-        Poll until the status "matches" the specificed number of checks.
+        Poll until the status "matches" the specified number of checks.
         """
         i = 0
         check = 0
@@ -67,8 +67,11 @@ class HealthCheck(object):
             if success(json_output):
                 check += 1
                 if check == self.settings['check']:
-                    log.debug("{} checks succeeded".format(self.settings['check']))
-                    return True
+                    success=(
+                        "{} checks succeeded".format(self.settings['check'])
+                        )
+                    log.debug(success)
+                    return success
             else:
                 # Reset check counter
                 check = 0
@@ -132,7 +135,7 @@ class HealthStatusCheck(HealthCheck):
 
     def wait(self):
         """
-        Poll until the status "matches" the specificed number of checks.
+        Poll until the status "matches" the specified number of checks.
         """
         cmd = json.dumps({"prefix": "health", "format": "json"})
 
